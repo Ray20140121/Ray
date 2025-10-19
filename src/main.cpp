@@ -16,7 +16,7 @@ adi::Pneumatics roof('a',false);
 adi::Pneumatics loader('b',false);
 Imu imu(8);
 void powerDriveMotor(int powerForward,int powerTurn);
-void driveForward(int distance);
+void driveForward(int distance, int timeout = 1500);
 void turn(int turn);
 int speedLimit(int speed);
 // void update_lcd();
@@ -86,21 +86,19 @@ void autonomous() {
   	// Add your autonomous logic here based on current_auton
 	intake.move (127);
 	middle.move (127);
-	driveForward(850);
+	delay(200);
+	driveForward(1720);
 	delay(100);
-	turn(90);
+	turn(122);
 	delay(1000);
-	driveForward(900);
-	delay(500);
-	turn(70);
-	delay(200);
 	driveForward(1700);
+	delay(300);
+	turn(-142);
+	roof.toggle();
 	delay(200);
-	turn(-50);
-	delay(200);
-	driveForward(1500);
+	driveForward(1000, 2000);
 	basket.move (127);
-	score.move (127);
+	score.move (100);
 }
 
 /**
@@ -133,7 +131,7 @@ void opcontrol() {
 			intake.move (127);
 			middle.move (127);
 			basket.move (127);
-			score.move (127);
+			score.move (100);
 		}
 		else if(master.get_digital(DIGITAL_R1)){
 			intake.move (127);
@@ -171,26 +169,26 @@ void powerDriveMotor(int powerForward,int powerTurn){
 	rightTop.move(powerForward - powerTurn);
 }
 
-
-void driveForward(int distance){
+void driveForward(int distance, int timeout){
 	leftFront.tare_position();
 	int multiplierConstant = 1; 
 	int power = 1;
 	int drivingDistanceRemaining = distance - leftFront.get_position(); 
-	while(drivingDistanceRemaining >= 3){ //distance left 
+	int startTime = millis();
+	while(std::abs(drivingDistanceRemaining) >= 3 && millis() - startTime < timeout){ //distance left 
 		drivingDistanceRemaining = distance - leftFront.get_position();
 		power = drivingDistanceRemaining*multiplierConstant; 
 		powerDriveMotor(speedLimit(power),0); 
 	}
 	powerDriveMotor(0,0);
 }
-
 void turn(int turn){
 	imu.tare_rotation();
-	int multiplierConstant = 1.5; 
+	int multiplierConstant = 1; 
 	int power = 1; 
+	int timeOut = millis();
 	int turningDistanceRemaining = turn - imu.get_rotation(); 
-	while(turningDistanceRemaining >= 1){ //distance left 
+	while(std::abs(turningDistanceRemaining) >= 2 && millis() - timeOut < 1500){ //distance left 
 		turningDistanceRemaining = turn - imu.get_rotation();
 		power = turningDistanceRemaining*multiplierConstant; 
 		powerDriveMotor(0,power);
@@ -210,32 +208,3 @@ int speedLimit(int speed) {
 		return speed;
 	}
 }
-
-
-// std::vector<std::string> auton_modes = {
-// 	"None",
-//   	"Red - Front",
-//   	"Red - Back",
-//   	"Blue - Front",
-//   	"Blue - Back",
-//   	"Skills",
-// };
-
-// void update_lcd(){
-//   	pros::lcd::clear();
-// 	pros::lcd::set_text(1, "Selected Auton:");
-// 	pros::lcd::set_text(2, auton_modes[current_auton]);
-// }
-
-// void auton_selector_task() {
-//   	while (true) {
-//     // Advance auton if R1 is held and A is newly pressed
-//     	if (master.is_pressed(pros::E_CONTROLLER_DIGITAL_DOWN) &&
-//         master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)) {
-//     		current_auton = (current_auton + 1) % auton_modes.size();
-//     		update_lcd();
-//     	}
-
-//     	delay(100);
-//   	}
-// }
