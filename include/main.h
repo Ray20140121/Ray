@@ -50,7 +50,7 @@
  * namespace.
  */
 using namespace pros;
-// using namespace pros::literals;
+// using namespace literals;
 // using namespace okapi;
 
 /**
